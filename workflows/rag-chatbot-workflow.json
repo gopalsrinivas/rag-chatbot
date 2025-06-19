@@ -1,0 +1,140 @@
+{
+  "name": "Altibbe FAQ Chatbot",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "webhookId": "altibbe-faq-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "const { validateQuestion } = require('../scripts/utils.js');\n\nconst question = $input.first().json.question;\ntry {\n  return {\n    validQuestion: validateQuestion(question)\n  };\n} catch (error) {\n  return {\n    error: error.message\n  };\n}"
+      },
+      "name": "Validate Question",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "script": "python",
+        "scriptPath": "../scripts/realtime_indexer.py"
+      },
+      "name": "Retrieve Context",
+      "type": "n8n-nodes-base.python",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "text": "Answer the following question based on the context:\nQuestion: {{$input.first().json.question}}\nContext: {{$input.all()[1].json.context}}\n\nProvide a concise answer and list sources used.",
+        "options": {}
+      },
+      "name": "Generate Response",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": {
+        "openAiApi": "openai-credentials"
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 450],
+      "webhookId": "altibbe-error-handler"
+    },
+    {
+      "parameters": {},
+      "name": "Response Formatter",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Validate Question",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Question": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Context": {
+      "main": [
+        [
+          {
+            "node": "Generate Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Response": {
+      "main": [
+        [
+          {
+            "node": "Response Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "tags": [],
+  "id": "1"
+}

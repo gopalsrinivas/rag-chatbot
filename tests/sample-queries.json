@@ -1,0 +1,17 @@
+[
+    {
+      "question": "What is Altibbe?",
+      "expectedKeywords": ["technology", "virtuous", "health"],
+      "category": "general"
+    },
+    {
+      "question": "What are the core values?",
+      "expectedKeywords": ["integrity", "wisdom", "humility"],
+      "category": "values"
+    },
+    {
+      "question": "What is the deadline?",
+      "expectedKeywords": ["24 hours"],
+      "category": "task"
+    }
+  ]
